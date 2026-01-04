@@ -14,6 +14,8 @@ import VerifyStudent from "./pages/VerifyStudent";
 
 // Admin Pages
 import AdminLogin from "./pages/AdminLogin";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/admin/Dashboard";
 import Students from "./pages/admin/Students";
 import Messages from "./pages/admin/Messages";
@@ -40,6 +42,8 @@ const App = () => (
 
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLogin />} />
+            <Route path="/admin/forgot-password" element={<ForgotPassword />} />
+            <Route path="/admin/reset-password" element={<ResetPassword />} />
             <Route path="/admin/dashboard" element={<Dashboard />} />
             <Route path="/admin/students" element={<Students />} />
             <Route path="/admin/messages" element={<Messages />} />
