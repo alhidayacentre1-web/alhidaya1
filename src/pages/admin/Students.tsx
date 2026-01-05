@@ -19,6 +19,16 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Table,
   TableBody,
   TableCell,
@@ -27,7 +37,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Edit, QrCode, ExternalLink, Upload, User } from 'lucide-react';
+import { Plus, Search, Edit, QrCode, ExternalLink, Upload, User, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { Student, GraduationStatus } from '@/types/database';
@@ -41,6 +51,7 @@ export default function Students() {
   const [yearFilter, setYearFilter] = useState<string>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [deletingStudent, setDeletingStudent] = useState<Student | null>(null);
 
   const [formData, setFormData] = useState({
     full_name: '',
@@ -204,6 +215,34 @@ export default function Students() {
     setSelectedPhoto(null);
     setPhotoPreview(student.photo_url || null);
     setDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!deletingStudent) return;
+    
+    try {
+      // Delete photo from storage if exists
+      if (deletingStudent.photo_url) {
+        const fileName = deletingStudent.photo_url.split('/').pop();
+        if (fileName) {
+          await supabase.storage.from('student-photos').remove([fileName]);
+        }
+      }
+      
+      const { error } = await supabase
+        .from('students')
+        .delete()
+        .eq('id', deletingStudent.id);
+      
+      if (error) throw error;
+      
+      toast.success('Student deleted successfully');
+      setDeletingStudent(null);
+      fetchStudents();
+    } catch (error) {
+      console.error('Error deleting student:', error);
+      toast.error('Failed to delete student');
+    }
   };
 
   const getStatusBadge = (status: GraduationStatus) => {
@@ -477,6 +516,15 @@ export default function Students() {
                             >
                               <ExternalLink className="h-4 w-4" />
                             </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setDeletingStudent(student)}
+                              title="Delete"
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -487,6 +535,25 @@ export default function Students() {
             )}
           </CardContent>
         </Card>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={!!deletingStudent} onOpenChange={(open) => !open && setDeletingStudent(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Student</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete <strong>{deletingStudent?.full_name}</strong>? 
+                This action cannot be undone and will permanently remove the student record and their photo.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AdminLayout>
   );
