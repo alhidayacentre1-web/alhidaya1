@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Menu, X, Shield } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { useState } from 'react';
+import schoolLogo from '@/assets/school-logo.png';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -18,9 +18,7 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center space-x-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full gradient-primary">
-            <Shield className="h-6 w-6 text-primary-foreground" />
-          </div>
+          <img src={schoolLogo} alt="ALHIDAYA CENTRE Logo" className="h-10 w-10 rounded-full object-cover" />
           <div className="hidden sm:block">
             <h1 className="font-serif text-lg font-bold text-primary">ALHIDAYA CENTRE</h1>
             <p className="text-xs text-muted-foreground">Excellence in Education</p>
@@ -40,11 +38,6 @@ export function Header() {
               {link.label}
             </Link>
           ))}
-          <Link to="/admin">
-            <Button variant="outline" size="sm">
-              Admin Login
-            </Button>
-          </Link>
         </nav>
 
         {/* Mobile Menu Button */}
@@ -73,11 +66,6 @@ export function Header() {
                 {link.label}
               </Link>
             ))}
-            <Link to="/admin" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="outline" size="sm" className="w-full mt-2">
-                Admin Login
-              </Button>
-            </Link>
           </nav>
         </div>
       )}

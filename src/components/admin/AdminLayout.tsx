@@ -1,8 +1,7 @@
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { 
-  Shield, 
   LayoutDashboard, 
   Users, 
   MessageSquare, 
@@ -12,7 +11,7 @@ import {
   X
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { useState } from 'react';
+import schoolLogo from '@/assets/school-logo.png';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -59,9 +58,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       {/* Mobile Header */}
       <header className="lg:hidden sticky top-0 z-50 flex h-16 items-center justify-between border-b border-border bg-card px-4">
         <div className="flex items-center space-x-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full gradient-primary">
-            <Shield className="h-4 w-4 text-primary-foreground" />
-          </div>
+          <img src={schoolLogo} alt="ALHIDAYA CENTRE Logo" className="h-8 w-8 rounded-full object-cover" />
           <span className="font-serif font-bold text-primary">Admin Panel</span>
         </div>
         <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2">
@@ -79,9 +76,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           <div className="flex h-full flex-col">
             {/* Logo */}
             <div className="hidden lg:flex h-16 items-center space-x-3 border-b border-sidebar-border px-6">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sidebar-primary">
-                <Shield className="h-5 w-5 text-sidebar-primary-foreground" />
-              </div>
+              <img src={schoolLogo} alt="ALHIDAYA CENTRE Logo" className="h-10 w-10 rounded-full object-cover" />
               <div>
                 <h1 className="font-serif text-sm font-bold">ALHIDAYA CENTRE</h1>
                 <p className="text-xs text-sidebar-foreground/70">Admin Panel</p>

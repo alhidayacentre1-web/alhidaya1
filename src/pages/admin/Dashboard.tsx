@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, GraduationCap, Award, XCircle } from 'lucide-react';
+import { Users, GraduationCap, Award, XCircle, MessageSquare, Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Stats {
@@ -117,27 +118,27 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <a
-                href="/admin/students"
+              <Link
+                to="/admin/students"
                 className="flex items-center space-x-3 rounded-lg border border-border p-4 transition-colors hover:bg-muted"
               >
                 <Users className="h-5 w-5 text-primary" />
                 <span className="font-medium">Manage Students</span>
-              </a>
-              <a
-                href="/admin/messages"
+              </Link>
+              <Link
+                to="/admin/messages"
                 className="flex items-center space-x-3 rounded-lg border border-border p-4 transition-colors hover:bg-muted"
               >
-                <Award className="h-5 w-5 text-primary" />
+                <MessageSquare className="h-5 w-5 text-primary" />
                 <span className="font-medium">View Messages</span>
-              </a>
-              <a
-                href="/admin/settings"
+              </Link>
+              <Link
+                to="/admin/settings"
                 className="flex items-center space-x-3 rounded-lg border border-border p-4 transition-colors hover:bg-muted"
               >
-                <GraduationCap className="h-5 w-5 text-primary" />
+                <Settings className="h-5 w-5 text-primary" />
                 <span className="font-medium">Update Settings</span>
-              </a>
+              </Link>
             </div>
           </CardContent>
         </Card>

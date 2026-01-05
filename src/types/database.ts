@@ -7,6 +7,7 @@ export interface Student {
   certificate_number: string | null;
   graduation_year: number | null;
   graduation_status: GraduationStatus;
+  photo_url: string | null;
   created_at: string;
   updated_at: string;
 }

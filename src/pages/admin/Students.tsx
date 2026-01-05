@@ -27,10 +27,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Edit, QrCode, ExternalLink } from 'lucide-react';
+import { Plus, Search, Edit, QrCode, ExternalLink, Upload, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { Student, GraduationStatus } from '@/types/database';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function Students() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -48,6 +49,9 @@ export default function Students() {
     graduation_year: '',
     graduation_status: 'pending' as GraduationStatus,
   });
+  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   const fetchStudents = async () => {
     try {
@@ -70,11 +74,51 @@ export default function Students() {
     fetchStudents();
   }, []);
 
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Photo must be less than 5MB');
+        return;
+      }
+      setSelectedPhoto(file);
+      setPhotoPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const uploadPhoto = async (studentId: string): Promise<string | null> => {
+    if (!selectedPhoto) return null;
+    
+    setUploadingPhoto(true);
+    try {
+      const fileExt = selectedPhoto.name.split('.').pop();
+      const fileName = `${studentId}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('student-photos')
+        .upload(fileName, selectedPhoto, { upsert: true });
+      
+      if (uploadError) throw uploadError;
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from('student-photos')
+        .getPublicUrl(fileName);
+      
+      return publicUrl;
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      toast.error('Failed to upload photo');
+      return null;
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
-      const payload = {
+      const basePayload = {
         full_name: formData.full_name,
         admission_number: formData.admission_number,
         certificate_number: formData.certificate_number || null,
@@ -83,15 +127,26 @@ export default function Students() {
       };
 
       if (editingStudent) {
+        // Upload photo if selected
+        let photoUrl: string | null = null;
+        if (selectedPhoto) {
+          photoUrl = await uploadPhoto(editingStudent.id);
+        }
+        
         const { error } = await supabase
           .from('students')
-          .update(payload)
+          .update(photoUrl ? { ...basePayload, photo_url: photoUrl } : basePayload)
           .eq('id', editingStudent.id);
 
         if (error) throw error;
         toast.success('Student updated successfully');
       } else {
-        const { error } = await supabase.from('students').insert([payload]);
+        // First create the student to get the ID
+        const { data: newStudent, error } = await supabase
+          .from('students')
+          .insert([basePayload])
+          .select()
+          .single();
 
         if (error) {
           if (error.message.includes('duplicate')) {
@@ -100,6 +155,18 @@ export default function Students() {
           }
           throw error;
         }
+        
+        // Upload photo if selected
+        if (selectedPhoto && newStudent) {
+          const photoUrl = await uploadPhoto(newStudent.id);
+          if (photoUrl) {
+            await supabase
+              .from('students')
+              .update({ photo_url: photoUrl })
+              .eq('id', newStudent.id);
+          }
+        }
+        
         toast.success('Student added successfully');
       }
 
@@ -121,6 +188,8 @@ export default function Students() {
       graduation_status: 'pending',
     });
     setEditingStudent(null);
+    setSelectedPhoto(null);
+    setPhotoPreview(null);
   };
 
   const openEditDialog = (student: Student) => {
@@ -132,6 +201,8 @@ export default function Students() {
       graduation_year: student.graduation_year?.toString() || '',
       graduation_status: student.graduation_status,
     });
+    setSelectedPhoto(null);
+    setPhotoPreview(student.photo_url || null);
     setDialogOpen(true);
   };
 
@@ -250,8 +321,38 @@ export default function Students() {
                     </SelectContent>
                   </Select>
                 </div>
-                <Button type="submit" className="w-full">
-                  {editingStudent ? 'Update Student' : 'Add Student'}
+                <div className="space-y-2">
+                  <Label>Student Photo</Label>
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-16 w-16">
+                      <AvatarImage src={photoPreview || undefined} alt="Student photo" />
+                      <AvatarFallback>
+                        <User className="h-8 w-8 text-muted-foreground" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <Input
+                        id="photo"
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePhotoChange}
+                        className="hidden"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => document.getElementById('photo')?.click()}
+                      >
+                        <Upload className="mr-2 h-4 w-4" />
+                        {photoPreview ? 'Change Photo' : 'Upload Photo'}
+                      </Button>
+                      <p className="text-xs text-muted-foreground mt-1">Max 5MB, JPG/PNG</p>
+                    </div>
+                  </div>
+                </div>
+                <Button type="submit" className="w-full" disabled={uploadingPhoto}>
+                  {uploadingPhoto ? 'Uploading...' : editingStudent ? 'Update Student' : 'Add Student'}
                 </Button>
               </form>
             </DialogContent>
@@ -318,6 +419,7 @@ export default function Students() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Photo</TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead>Admission #</TableHead>
                       <TableHead>Certificate #</TableHead>
@@ -329,6 +431,14 @@ export default function Students() {
                   <TableBody>
                     {filteredStudents.map((student) => (
                       <TableRow key={student.id}>
+                        <TableCell>
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={student.photo_url || undefined} alt={student.full_name} />
+                            <AvatarFallback>
+                              <User className="h-4 w-4 text-muted-foreground" />
+                            </AvatarFallback>
+                          </Avatar>
+                        </TableCell>
                         <TableCell className="font-medium">{student.full_name}</TableCell>
                         <TableCell className="font-mono text-sm">
                           {student.admission_number}
