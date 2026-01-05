@@ -3,33 +3,25 @@ import { PublicLayout } from '@/components/layout/PublicLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Shield, Award, Users, Calendar, CheckCircle, ArrowRight } from 'lucide-react';
-
-const highlights = [
-  {
-    icon: Calendar,
-    title: '33+ Years',
-    description: 'Of educational excellence',
-  },
-  {
-    icon: Users,
-    title: '5,000+',
-    description: 'Successful graduates',
-  },
-  {
-    icon: Award,
-    title: 'Accredited',
-    description: 'Nationally recognized',
-  },
-  {
-    icon: CheckCircle,
-    title: 'Verified',
-    description: 'Secure certificate system',
-  },
-];
-
+const highlights = [{
+  icon: Calendar,
+  title: '33+ Years',
+  description: 'Of educational excellence'
+}, {
+  icon: Users,
+  title: '5,000+',
+  description: 'Successful graduates'
+}, {
+  icon: Award,
+  title: 'Accredited',
+  description: 'Nationally recognized'
+}, {
+  icon: CheckCircle,
+  title: 'Verified',
+  description: 'Secure certificate system'
+}];
 export default function Home() {
-  return (
-    <PublicLayout>
+  return <PublicLayout>
       {/* Hero Section */}
       <section className="relative overflow-hidden gradient-primary py-20 md:py-32">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-50" />
@@ -71,8 +63,7 @@ export default function Home() {
       <section className="py-16 md:py-24 bg-muted">
         <div className="container">
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {highlights.map((item) => (
-              <Card key={item.title} className="border-0 shadow-lg animate-fade-in">
+            {highlights.map(item => <Card key={item.title} className="border-0 shadow-lg animate-fade-in">
                 <CardContent className="flex flex-col items-center p-6 text-center">
                   <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
                     <item.icon className="h-7 w-7 text-primary" />
@@ -80,8 +71,7 @@ export default function Home() {
                   <h3 className="font-serif text-2xl font-bold text-foreground">{item.title}</h3>
                   <p className="mt-1 text-muted-foreground">{item.description}</p>
                 </CardContent>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </div>
       </section>
@@ -94,12 +84,7 @@ export default function Home() {
               Welcome to ALHIDAYA CENTRE
             </h2>
             <div className="mt-4 h-1 w-24 mx-auto gradient-gold rounded-full" />
-            <p className="mt-6 text-lg text-muted-foreground leading-relaxed">
-              For over two decades, ALHIDAYA CENTRE has been a beacon of educational excellence. 
-              Our commitment to academic rigor, character development, and holistic growth has 
-              produced thousands of successful graduates who are making meaningful contributions 
-              to society.
-            </p>
+            <p className="mt-6 text-lg text-muted-foreground leading-relaxed">For over three decades, ALHIDAYA CENTRE has been a beacon of educational excellence. Our commitment to academic rigor, character development, and holistic growth has produced thousands of successful graduates who are making meaningful contributions to society.</p>
             <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
               We take pride in our transparent verification system that ensures the authenticity 
               of every certificate we issue. Employers and institutions can easily verify our 
@@ -139,6 +124,5 @@ export default function Home() {
           </Card>
         </div>
       </section>
-    </PublicLayout>
-  );
+    </PublicLayout>;
 }
