@@ -180,6 +180,17 @@ export default function VerifyStudent() {
 
               {/* Student Info */}
               <div className="space-y-6">
+                {/* Student Photo */}
+                {student.photo_url && (
+                  <div className="flex justify-center">
+                    <img 
+                      src={student.photo_url} 
+                      alt={student.full_name}
+                      className="h-32 w-32 rounded-full object-cover border-4 border-primary/20 shadow-lg"
+                    />
+                  </div>
+                )}
+
                 <div className="text-center">
                   <div className="flex items-center justify-center space-x-2 text-muted-foreground mb-2">
                     <GraduationCap className="h-5 w-5" />
