@@ -28,7 +28,7 @@ export default function About() {
               About ALHIDAYA CENTRE
             </h1>
             <p className="mt-4 text-lg text-primary-foreground/80">
-              A legacy of educational excellence spanning over two decades
+              A legacy of educational excellence spanning over three decades
             </p>
           </div>
         </div>
