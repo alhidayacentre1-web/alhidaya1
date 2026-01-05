@@ -87,8 +87,9 @@ export default function Contact() {
                     <div>
                       <h3 className="font-semibold text-foreground">Phone</h3>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        +1 234 567 890<br />
-                        +1 234 567 891
+                        +254 708 803 072<br />
+                        +254 716 165 551<br />
+                        +254 796 846 431
                       </p>
                     </div>
                   </div>
@@ -102,10 +103,9 @@ export default function Contact() {
                       <Mail className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-foreground">​alhidayacentre1@gmail.com</h3>
+                      <h3 className="font-semibold text-foreground">Email</h3>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        info@alhidayacentre.edu<br />
-                        admissions@alhidayacentre.edu
+                        alhidayacentre1@gmail.com
                       </p>
                     </div>
                   </div>
