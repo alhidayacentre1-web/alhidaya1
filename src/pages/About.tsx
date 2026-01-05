@@ -1,33 +1,25 @@
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Target, Eye, Heart, Users } from 'lucide-react';
-
-const values = [
-  {
-    icon: Target,
-    title: 'Excellence',
-    description: 'We pursue the highest standards in education and character development.',
-  },
-  {
-    icon: Heart,
-    title: 'Integrity',
-    description: 'We uphold honesty, transparency, and ethical conduct in all we do.',
-  },
-  {
-    icon: Users,
-    title: 'Community',
-    description: 'We foster a supportive environment where every student belongs.',
-  },
-  {
-    icon: Eye,
-    title: 'Innovation',
-    description: 'We embrace modern teaching methods while honoring traditional values.',
-  },
-];
-
+const values = [{
+  icon: Target,
+  title: 'Excellence',
+  description: 'We pursue the highest standards in education and character development.'
+}, {
+  icon: Heart,
+  title: 'Integrity',
+  description: 'We uphold honesty, transparency, and ethical conduct in all we do.'
+}, {
+  icon: Users,
+  title: 'Community',
+  description: 'We foster a supportive environment where every student belongs.'
+}, {
+  icon: Eye,
+  title: 'Innovation',
+  description: 'We embrace modern teaching methods while honoring traditional values.'
+}];
 export default function About() {
-  return (
-    <PublicLayout>
+  return <PublicLayout>
       {/* Hero */}
       <section className="gradient-primary py-16 md:py-24">
         <div className="container">
@@ -52,10 +44,7 @@ export default function About() {
             <div className="mt-4 h-1 w-24 mx-auto gradient-gold rounded-full" />
             <div className="mt-8 space-y-6 text-muted-foreground leading-relaxed">
               <p>
-                Founded in 1998, ALHIDAYA CENTRE began as a small educational institution with 
-                a vision to provide quality education that combines academic excellence with 
-                strong moral values. What started with just 50 students has grown into a 
-                thriving center of learning.
+                Founded in 1993, ALHIDAYA CENTRE began as a small educational institution with a vision to provide quality education that combines academic excellence with strong moral values. What started with just 50 students has grown into a thriving center of learning.
               </p>
               <p>
                 Over the years, we have expanded our facilities, enhanced our curriculum, and 
@@ -116,8 +105,7 @@ export default function About() {
             <div className="mt-4 h-1 w-24 mx-auto gradient-gold rounded-full" />
           </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {values.map((value) => (
-              <Card key={value.title} className="border-0 shadow-lg text-center">
+            {values.map(value => <Card key={value.title} className="border-0 shadow-lg text-center">
                 <CardContent className="p-6">
                   <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
                     <value.icon className="h-7 w-7 text-primary" />
@@ -125,8 +113,7 @@ export default function About() {
                   <h3 className="font-serif text-xl font-bold text-foreground">{value.title}</h3>
                   <p className="mt-2 text-sm text-muted-foreground">{value.description}</p>
                 </CardContent>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </div>
       </section>
@@ -151,6 +138,5 @@ export default function About() {
           </div>
         </div>
       </section>
-    </PublicLayout>
-  );
+    </PublicLayout>;
 }
