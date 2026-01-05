@@ -7,7 +7,7 @@ import { Shield, Award, Users, Calendar, CheckCircle, ArrowRight } from 'lucide-
 const highlights = [
   {
     icon: Calendar,
-    title: '25+ Years',
+    title: '33+ Years',
     description: 'Of educational excellence',
   },
   {
