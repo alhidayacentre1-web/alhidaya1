@@ -86,10 +86,11 @@ export default function Contact() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-foreground">Phone</h3>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        +1 234 567 890<br />
-                        +1 234 567 891
-                      </p>
+                      <div className="mt-1 text-sm text-muted-foreground space-y-1">
+                        <p>+254 708 803 072</p>
+                        <p>+254 716 165 551</p>
+                        <p>+254 796 846 431</p>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
