@@ -50,6 +50,24 @@ export type Database = {
         }
         Relationships: []
       }
+      graduation_years: {
+        Row: {
+          created_at: string
+          id: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          year?: number
+        }
+        Relationships: []
+      }
       school_settings: {
         Row: {
           id: string

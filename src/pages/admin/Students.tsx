@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -43,12 +44,19 @@ import { toast } from 'sonner';
 import type { Student, GraduationStatus } from '@/types/database';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
+interface GraduationYear {
+  id: string;
+  year: number;
+}
+
 export default function Students() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [students, setStudents] = useState<Student[]>([]);
+  const [graduationYears, setGraduationYears] = useState<GraduationYear[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [yearFilter, setYearFilter] = useState<string>('all');
+  const [yearFilter, setYearFilter] = useState<string>(searchParams.get('year') || 'all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [deletingStudent, setDeletingStudent] = useState<Student | null>(null);
@@ -63,6 +71,20 @@ export default function Students() {
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
+  const fetchGraduationYears = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('graduation_years')
+        .select('id, year')
+        .order('year', { ascending: false });
+
+      if (error) throw error;
+      setGraduationYears(data || []);
+    } catch (error) {
+      console.error('Error fetching graduation years:', error);
+    }
+  };
 
   const fetchStudents = async () => {
     try {
@@ -82,8 +104,19 @@ export default function Students() {
   };
 
   useEffect(() => {
+    fetchGraduationYears();
     fetchStudents();
   }, []);
+
+  // Update URL when year filter changes
+  useEffect(() => {
+    if (yearFilter === 'all') {
+      searchParams.delete('year');
+    } else {
+      searchParams.set('year', yearFilter);
+    }
+    setSearchParams(searchParams, { replace: true });
+  }, [yearFilter]);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -128,12 +161,18 @@ export default function Students() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validate graduation year is selected
+    if (!formData.graduation_year) {
+      toast.error('Please select a graduation year');
+      return;
+    }
+
     try {
       const basePayload = {
         full_name: formData.full_name,
         admission_number: formData.admission_number,
         certificate_number: formData.certificate_number || null,
-        graduation_year: formData.graduation_year ? parseInt(formData.graduation_year) : null,
+        graduation_year: parseInt(formData.graduation_year),
         graduation_status: formData.graduation_status,
       };
 
@@ -298,9 +337,6 @@ export default function Students() {
     return matchesSearch && matchesStatus && matchesYear;
   });
 
-  const uniqueYears = [...new Set(students.map((s) => s.graduation_year).filter(Boolean))].sort(
-    (a, b) => (b || 0) - (a || 0)
-  );
 
   const getVerificationUrl = (studentId: string) => {
     return `${window.location.origin}/verify/${studentId}`;
@@ -360,14 +396,28 @@ export default function Students() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="graduation_year">Graduation Year</Label>
-                  <Input
-                    id="graduation_year"
-                    type="number"
-                    value={formData.graduation_year}
-                    onChange={(e) => setFormData({ ...formData, graduation_year: e.target.value })}
-                    placeholder="2024"
-                  />
+                  <Label htmlFor="graduation_year">Graduation Year *</Label>
+                  {graduationYears.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      No years available. Please create a year first in the Years section.
+                    </p>
+                  ) : (
+                    <Select
+                      value={formData.graduation_year}
+                      onValueChange={(value) => setFormData({ ...formData, graduation_year: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select graduation year" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {graduationYears.map((year) => (
+                          <SelectItem key={year.id} value={year.year.toString()}>
+                            {year.year}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="graduation_status">Graduation Status</Label>
@@ -455,9 +505,9 @@ export default function Students() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Years</SelectItem>
-                  {uniqueYears.map((year) => (
-                    <SelectItem key={year} value={year?.toString() || ''}>
-                      {year}
+                  {graduationYears.map((year) => (
+                    <SelectItem key={year.id} value={year.year.toString()}>
+                      {year.year}
                     </SelectItem>
                   ))}
                 </SelectContent>

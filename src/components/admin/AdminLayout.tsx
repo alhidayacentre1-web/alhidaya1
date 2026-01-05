@@ -8,7 +8,8 @@ import {
   Settings, 
   LogOut,
   Menu,
-  X
+  X,
+  CalendarDays
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import schoolLogo from '@/assets/school-logo.png';
@@ -19,6 +20,7 @@ interface AdminLayoutProps {
 
 const navItems = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/admin/years', label: 'Years', icon: CalendarDays },
   { href: '/admin/students', label: 'Students', icon: Users },
   { href: '/admin/messages', label: 'Messages', icon: MessageSquare },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
