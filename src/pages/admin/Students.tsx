@@ -138,6 +138,21 @@ export default function Students() {
       };
 
       if (editingStudent) {
+        // Check if admission number is being changed and already exists (excluding current student)
+        if (formData.admission_number !== editingStudent.admission_number) {
+          const { data: existingAdmission } = await supabase
+            .from('students')
+            .select('id')
+            .eq('admission_number', formData.admission_number)
+            .neq('id', editingStudent.id)
+            .maybeSingle();
+          
+          if (existingAdmission) {
+            toast.error('A student with this admission number already exists');
+            return;
+          }
+        }
+
         // Upload photo if selected
         let photoUrl: string | null = null;
         if (selectedPhoto) {
@@ -152,6 +167,18 @@ export default function Students() {
         if (error) throw error;
         toast.success('Student updated successfully');
       } else {
+        // Check if admission number already exists in database (real-time check)
+        const { data: existingAdmission } = await supabase
+          .from('students')
+          .select('id')
+          .eq('admission_number', formData.admission_number)
+          .maybeSingle();
+        
+        if (existingAdmission) {
+          toast.error('A student with this admission number already exists');
+          return;
+        }
+
         // First create the student to get the ID
         const { data: newStudent, error } = await supabase
           .from('students')
