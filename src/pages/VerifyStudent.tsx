@@ -8,14 +8,15 @@ import {
   XCircle, 
   AlertTriangle, 
   Clock, 
-  Shield, 
   ArrowLeft,
   GraduationCap,
   Calendar,
-  Hash
+  Hash,
+  Shield
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Student, SchoolSetting } from '@/types/database';
+import schoolLogo from '@/assets/school-logo.png';
 
 export default function VerifyStudent() {
   const { studentId } = useParams<{ studentId: string }>();
@@ -171,9 +172,7 @@ export default function VerifyStudent() {
               {/* Header */}
               <div className="text-center border-b border-border pb-6 mb-6">
                 <div className="flex items-center justify-center space-x-3 mb-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full gradient-primary">
-                    <Shield className="h-6 w-6 text-primary-foreground" />
-                  </div>
+                  <img src={schoolLogo} alt="ALHIDAYA CENTRE Logo" className="h-16 w-16 object-contain" />
                 </div>
                 <h1 className="font-serif text-2xl font-bold text-primary">ALHIDAYA CENTRE</h1>
                 <p className="text-sm text-muted-foreground">Certificate Verification</p>
