@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { Shield, Mail, Phone, MapPin } from 'lucide-react';
+import { Mail, Phone, MapPin } from 'lucide-react';
+import schoolLogo from '@/assets/school-logo.png';
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -11,9 +12,7 @@ export function Footer() {
           {/* Brand */}
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary">
-                <Shield className="h-6 w-6 text-secondary-foreground" />
-              </div>
+              <img src={schoolLogo} alt="ALHIDAYA CENTRE Logo" className="h-10 w-10 rounded-full object-cover" />
               <div>
                 <h3 className="font-serif text-lg font-bold">ALHIDAYA CENTRE</h3>
                 <p className="text-xs text-primary-foreground/70">Excellence in Education</p>

@@ -80,6 +80,7 @@ export type Database = {
           graduation_status: Database["public"]["Enums"]["graduation_status"]
           graduation_year: number | null
           id: string
+          photo_url: string | null
           updated_at: string
         }
         Insert: {
@@ -90,6 +91,7 @@ export type Database = {
           graduation_status?: Database["public"]["Enums"]["graduation_status"]
           graduation_year?: number | null
           id?: string
+          photo_url?: string | null
           updated_at?: string
         }
         Update: {
@@ -100,6 +102,7 @@ export type Database = {
           graduation_status?: Database["public"]["Enums"]["graduation_status"]
           graduation_year?: number | null
           id?: string
+          photo_url?: string | null
           updated_at?: string
         }
         Relationships: []
