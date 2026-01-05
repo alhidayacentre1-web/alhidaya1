@@ -57,7 +57,7 @@ export default function Home() {
                 </Button>
               </Link>
               <Link to="/about">
-                <Button size="lg" variant="outline" className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
+                <Button size="lg" variant="outline" className="border-secondary bg-secondary/10 text-secondary hover:bg-secondary/20">
                   Learn More
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
