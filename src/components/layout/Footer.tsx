@@ -50,16 +50,20 @@ export function Footer() {
               <div className="flex items-start space-x-3">
                 <MapPin className="h-4 w-4 mt-1 text-secondary" />
                 <p className="text-sm text-primary-foreground/80">
-                  123 Education Street, Knowledge City
+                  MANDERA, KENYA
                 </p>
               </div>
-              <div className="flex items-center space-x-3">
-                <Phone className="h-4 w-4 text-secondary" />
-                <p className="text-sm text-primary-foreground/80">+1 234 567 890</p>
+              <div className="flex items-start space-x-3">
+                <Phone className="h-4 w-4 mt-1 text-secondary" />
+                <div className="text-sm text-primary-foreground/80 space-y-1">
+                  <p>+254 708 803 072</p>
+                  <p>+254 716 165 551</p>
+                  <p>+254 796 846 431</p>
+                </div>
               </div>
               <div className="flex items-center space-x-3">
                 <Mail className="h-4 w-4 text-secondary" />
-                <p className="text-sm text-primary-foreground/80">info@alhidayacentre.edu</p>
+                <p className="text-sm text-primary-foreground/80">alhidayacentre1@gmail.com</p>
               </div>
             </div>
           </div>
