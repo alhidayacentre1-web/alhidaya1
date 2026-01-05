@@ -45,10 +45,7 @@ export default function About() {
                 Founded in 1993, ALHIDAYA CENTRE began as a small educational institution with a vision to provide quality education that combines academic excellence with strong moral values. What started with just 50 students has grown into a thriving center of learning.
               </p>
               <p>
-                Over the years, we have expanded our facilities, enhanced our curriculum, and 
-                welcomed dedicated educators who share our commitment to nurturing young minds. 
-                Our graduates have gone on to achieve remarkable success in various fields, 
-                from medicine and engineering to business and public service.
+                Over the years, we have expanded our facilities, enhanced our curriculum, and welcomed dedicated educators who share our commitment to nurturing young minds. Our graduates have gone on to achieve remarkable success.
               </p>
               <p>
                 Today, ALHIDAYA CENTRE stands as a nationally recognized institution, known for 
