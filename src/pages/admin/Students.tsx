@@ -44,6 +44,7 @@ import { toast } from 'sonner';
 import type { Student, GraduationStatus, Gender } from '@/types/database';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { StudentQRCodeDialog } from '@/components/admin/StudentQRCodeDialog';
 
 interface GraduationYear {
   id: string;
@@ -62,6 +63,7 @@ export default function Students() {
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [deletingStudent, setDeletingStudent] = useState<Student | null>(null);
   const [restoringStudent, setRestoringStudent] = useState<Student | null>(null);
+  const [qrStudent, setQrStudent] = useState<Student | null>(null);
   const [activeTab, setActiveTab] = useState<string>('active');
 
   const [formData, setFormData] = useState({
@@ -636,11 +638,8 @@ export default function Students() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  onClick={() => {
-                                    navigator.clipboard.writeText(getVerificationUrl(student.id));
-                                    toast.success('Verification URL copied!');
-                                  }}
-                                  title="Copy verification URL"
+                                  onClick={() => setQrStudent(student)}
+                                  title="View QR Code"
                                 >
                                   <QrCode className="h-4 w-4" />
                                 </Button>
@@ -786,6 +785,13 @@ export default function Students() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* QR Code Dialog */}
+        <StudentQRCodeDialog
+          student={qrStudent}
+          open={!!qrStudent}
+          onOpenChange={(open) => !open && setQrStudent(null)}
+        />
       </div>
     </AdminLayout>
   );
