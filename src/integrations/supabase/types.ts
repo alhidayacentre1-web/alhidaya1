@@ -94,7 +94,9 @@ export type Database = {
           admission_number: string
           certificate_number: string | null
           created_at: string
+          deleted_at: string | null
           full_name: string
+          gender: string
           graduation_status: Database["public"]["Enums"]["graduation_status"]
           graduation_year: number | null
           id: string
@@ -105,7 +107,9 @@ export type Database = {
           admission_number: string
           certificate_number?: string | null
           created_at?: string
+          deleted_at?: string | null
           full_name: string
+          gender?: string
           graduation_status?: Database["public"]["Enums"]["graduation_status"]
           graduation_year?: number | null
           id?: string
@@ -116,7 +120,9 @@ export type Database = {
           admission_number?: string
           certificate_number?: string | null
           created_at?: string
+          deleted_at?: string | null
           full_name?: string
+          gender?: string
           graduation_status?: Database["public"]["Enums"]["graduation_status"]
           graduation_year?: number | null
           id?: string

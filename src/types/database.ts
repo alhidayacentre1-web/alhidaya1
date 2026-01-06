@@ -1,4 +1,5 @@
 export type GraduationStatus = 'pending' | 'graduated' | 'revoked';
+export type Gender = 'male' | 'female';
 
 export interface Student {
   id: string;
@@ -7,7 +8,9 @@ export interface Student {
   certificate_number: string | null;
   graduation_year: number | null;
   graduation_status: GraduationStatus;
+  gender: Gender;
   photo_url: string | null;
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
 }
