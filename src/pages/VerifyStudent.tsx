@@ -41,7 +41,7 @@ export default function VerifyStudent() {
 
         if (studentResult.error) throw studentResult.error;
         
-        setStudent(studentResult.data);
+        setStudent(studentResult.data as Student);
         setVerificationMessage(
           settingsResult.data?.setting_value || 
           'This confirms that the above student successfully graduated from ALHIDAYA CENTRE.'

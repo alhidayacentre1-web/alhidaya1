@@ -38,10 +38,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Edit, QrCode, ExternalLink, Upload, User, Trash2 } from 'lucide-react';
+import { Plus, Search, Edit, QrCode, ExternalLink, Upload, User, Trash2, RotateCcw, Archive } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import type { Student, GraduationStatus } from '@/types/database';
+import type { Student, GraduationStatus, Gender } from '@/types/database';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface GraduationYear {
@@ -60,6 +61,8 @@ export default function Students() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [deletingStudent, setDeletingStudent] = useState<Student | null>(null);
+  const [restoringStudent, setRestoringStudent] = useState<Student | null>(null);
+  const [activeTab, setActiveTab] = useState<string>('active');
 
   const [formData, setFormData] = useState({
     full_name: '',
@@ -67,6 +70,7 @@ export default function Students() {
     certificate_number: '',
     graduation_year: '',
     graduation_status: 'pending' as GraduationStatus,
+    gender: 'male' as Gender,
   });
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -94,7 +98,7 @@ export default function Students() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setStudents(data || []);
+      setStudents((data || []) as Student[]);
     } catch (error) {
       console.error('Error fetching students:', error);
       toast.error('Failed to fetch students');
@@ -174,6 +178,7 @@ export default function Students() {
         certificate_number: formData.certificate_number || null,
         graduation_year: parseInt(formData.graduation_year),
         graduation_status: formData.graduation_status,
+        gender: formData.gender,
       };
 
       if (editingStudent) {
@@ -263,6 +268,7 @@ export default function Students() {
       certificate_number: '',
       graduation_year: '',
       graduation_status: 'pending',
+      gender: 'male',
     });
     setEditingStudent(null);
     setSelectedPhoto(null);
@@ -277,6 +283,7 @@ export default function Students() {
       certificate_number: student.certificate_number || '',
       graduation_year: student.graduation_year?.toString() || '',
       graduation_status: student.graduation_status,
+      gender: student.gender || 'male',
     });
     setSelectedPhoto(null);
     setPhotoPreview(student.photo_url || null);
@@ -287,27 +294,40 @@ export default function Students() {
     if (!deletingStudent) return;
     
     try {
-      // Delete photo from storage if exists
-      if (deletingStudent.photo_url) {
-        const fileName = deletingStudent.photo_url.split('/').pop();
-        if (fileName) {
-          await supabase.storage.from('student-photos').remove([fileName]);
-        }
-      }
-      
+      // Soft delete - set deleted_at timestamp
       const { error } = await supabase
         .from('students')
-        .delete()
+        .update({ deleted_at: new Date().toISOString() })
         .eq('id', deletingStudent.id);
       
       if (error) throw error;
       
-      toast.success('Student deleted successfully');
+      toast.success('Student moved to deleted records');
       setDeletingStudent(null);
       fetchStudents();
     } catch (error) {
       console.error('Error deleting student:', error);
       toast.error('Failed to delete student');
+    }
+  };
+
+  const handleRestore = async () => {
+    if (!restoringStudent) return;
+    
+    try {
+      const { error } = await supabase
+        .from('students')
+        .update({ deleted_at: null })
+        .eq('id', restoringStudent.id);
+      
+      if (error) throw error;
+      
+      toast.success('Student restored successfully');
+      setRestoringStudent(null);
+      fetchStudents();
+    } catch (error) {
+      console.error('Error restoring student:', error);
+      toast.error('Failed to restore student');
     }
   };
 
@@ -324,7 +344,10 @@ export default function Students() {
     }
   };
 
-  const filteredStudents = students.filter((student) => {
+  const activeStudents = students.filter((student) => !student.deleted_at);
+  const deletedStudents = students.filter((student) => student.deleted_at);
+
+  const filteredStudents = (activeTab === 'active' ? activeStudents : deletedStudents).filter((student) => {
     const matchesSearch =
       student.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       student.admission_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -418,6 +441,23 @@ export default function Students() {
                       </SelectContent>
                     </Select>
                   )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="gender">Gender *</Label>
+                  <Select
+                    value={formData.gender}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, gender: value as Gender })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select gender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="male">Boy</SelectItem>
+                      <SelectItem value="female">Girl</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="graduation_status">Graduation Status</Label>
@@ -516,102 +556,198 @@ export default function Students() {
           </CardContent>
         </Card>
 
-        {/* Students Table */}
-        <Card className="border-0 shadow-lg">
-          <CardHeader>
-            <CardTitle className="font-serif">
-              Student Records ({filteredStudents.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="text-center py-8">Loading...</div>
-            ) : filteredStudents.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No students found
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Photo</TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Admission #</TableHead>
-                      <TableHead>Certificate #</TableHead>
-                      <TableHead>Year</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredStudents.map((student) => (
-                      <TableRow key={student.id}>
-                        <TableCell>
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={student.photo_url || undefined} alt={student.full_name} />
-                            <AvatarFallback>
-                              <User className="h-4 w-4 text-muted-foreground" />
-                            </AvatarFallback>
-                          </Avatar>
-                        </TableCell>
-                        <TableCell className="font-medium">{student.full_name}</TableCell>
-                        <TableCell className="font-mono text-sm">
-                          {student.admission_number}
-                        </TableCell>
-                        <TableCell className="font-mono text-sm">
-                          {student.certificate_number || '-'}
-                        </TableCell>
-                        <TableCell>{student.graduation_year || '-'}</TableCell>
-                        <TableCell>{getStatusBadge(student.graduation_status)}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => openEditDialog(student)}
-                              title="Edit"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                navigator.clipboard.writeText(getVerificationUrl(student.id));
-                                toast.success('Verification URL copied!');
-                              }}
-                              title="Copy verification URL"
-                            >
-                              <QrCode className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => window.open(`/verify/${student.id}`, '_blank')}
-                              title="View verification page"
-                            >
-                              <ExternalLink className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setDeletingStudent(student)}
-                              title="Delete"
-                              className="text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        {/* Students Table with Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-4">
+            <TabsTrigger value="active" className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              Active Students ({activeStudents.length})
+            </TabsTrigger>
+            <TabsTrigger value="deleted" className="flex items-center gap-2">
+              <Archive className="h-4 w-4" />
+              Deleted Students ({deletedStudents.length})
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="active">
+            <Card className="border-0 shadow-lg">
+              <CardHeader>
+                <CardTitle className="font-serif">
+                  Active Student Records ({filteredStudents.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="text-center py-8">Loading...</div>
+                ) : filteredStudents.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No students found
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Photo</TableHead>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Gender</TableHead>
+                          <TableHead>Admission #</TableHead>
+                          <TableHead>Certificate #</TableHead>
+                          <TableHead>Year</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredStudents.map((student) => (
+                          <TableRow key={student.id}>
+                            <TableCell>
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src={student.photo_url || undefined} alt={student.full_name} />
+                                <AvatarFallback>
+                                  <User className="h-4 w-4 text-muted-foreground" />
+                                </AvatarFallback>
+                              </Avatar>
+                            </TableCell>
+                            <TableCell className="font-medium">{student.full_name}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline">
+                                {student.gender === 'male' ? 'Boy' : 'Girl'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="font-mono text-sm">
+                              {student.admission_number}
+                            </TableCell>
+                            <TableCell className="font-mono text-sm">
+                              {student.certificate_number || '-'}
+                            </TableCell>
+                            <TableCell>{student.graduation_year || '-'}</TableCell>
+                            <TableCell>{getStatusBadge(student.graduation_status)}</TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => openEditDialog(student)}
+                                  title="Edit"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(getVerificationUrl(student.id));
+                                    toast.success('Verification URL copied!');
+                                  }}
+                                  title="Copy verification URL"
+                                >
+                                  <QrCode className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => window.open(`/verify/${student.id}`, '_blank')}
+                                  title="View verification page"
+                                >
+                                  <ExternalLink className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setDeletingStudent(student)}
+                                  title="Delete"
+                                  className="text-destructive hover:text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="deleted">
+            <Card className="border-0 shadow-lg">
+              <CardHeader>
+                <CardTitle className="font-serif">
+                  Deleted Student Records ({filteredStudents.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="text-center py-8">Loading...</div>
+                ) : filteredStudents.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No deleted students found
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Photo</TableHead>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Gender</TableHead>
+                          <TableHead>Admission #</TableHead>
+                          <TableHead>Certificate #</TableHead>
+                          <TableHead>Year</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredStudents.map((student) => (
+                          <TableRow key={student.id} className="opacity-75">
+                            <TableCell>
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src={student.photo_url || undefined} alt={student.full_name} />
+                                <AvatarFallback>
+                                  <User className="h-4 w-4 text-muted-foreground" />
+                                </AvatarFallback>
+                              </Avatar>
+                            </TableCell>
+                            <TableCell className="font-medium">{student.full_name}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline">
+                                {student.gender === 'male' ? 'Boy' : 'Girl'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="font-mono text-sm">
+                              {student.admission_number}
+                            </TableCell>
+                            <TableCell className="font-mono text-sm">
+                              {student.certificate_number || '-'}
+                            </TableCell>
+                            <TableCell>{student.graduation_year || '-'}</TableCell>
+                            <TableCell>{getStatusBadge(student.graduation_status)}</TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setRestoringStudent(student)}
+                                className="text-primary hover:text-primary"
+                              >
+                                <RotateCcw className="mr-2 h-4 w-4" />
+                                Restore
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
 
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={!!deletingStudent} onOpenChange={(open) => !open && setDeletingStudent(null)}>
@@ -620,13 +756,32 @@ export default function Students() {
               <AlertDialogTitle>Delete Student</AlertDialogTitle>
               <AlertDialogDescription>
                 Are you sure you want to delete <strong>{deletingStudent?.full_name}</strong>? 
-                This action cannot be undone and will permanently remove the student record and their photo.
+                The student will be moved to deleted records and can be restored anytime.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                 Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Restore Confirmation Dialog */}
+        <AlertDialog open={!!restoringStudent} onOpenChange={(open) => !open && setRestoringStudent(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Restore Student</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to restore <strong>{restoringStudent?.full_name}</strong>? 
+                The student will be moved back to active records.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleRestore}>
+                Restore
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
