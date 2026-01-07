@@ -4,10 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Shield, CheckCircle, AlertCircle } from 'lucide-react';
+import { Shield, CheckCircle, AlertCircle, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { Link } from 'react-router-dom';
 
 const passwordSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
@@ -20,27 +21,66 @@ const passwordSchema = z.object({
 export default function ResetPassword() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [errors, setErrors] = useState<{ password?: string; confirmPassword?: string }>({});
   const [sessionError, setSessionError] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if we have a valid session from the reset link
+    let mounted = true;
+
+    // Listen for PASSWORD_RECOVERY event from Supabase
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
+      
+      if (event === 'PASSWORD_RECOVERY') {
+        setCheckingSession(false);
+        setSessionError(false);
+      } else if (event === 'SIGNED_IN' && session) {
+        // User might already have a valid session
+        setCheckingSession(false);
+        setSessionError(false);
+      }
+    });
+
+    // Also check for existing session or URL errors
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        // Check URL for error or access_token
+      
+      if (!mounted) return;
+
+      if (session) {
+        setCheckingSession(false);
+        setSessionError(false);
+      } else {
+        // Check URL for error
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const error = hashParams.get('error_description');
         if (error) {
           toast.error(error);
           setSessionError(true);
+          setCheckingSession(false);
+        } else {
+          // Give time for auth state change to fire
+          setTimeout(() => {
+            if (mounted) {
+              setCheckingSession(false);
+            }
+          }, 2000);
         }
       }
     };
+
     checkSession();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -83,6 +123,21 @@ export default function ResetPassword() {
     }
   };
 
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted p-4">
+        <Card className="w-full max-w-md border-0 shadow-xl">
+          <CardContent className="pt-8 pb-8">
+            <div className="text-center space-y-4">
+              <div className="animate-spin mx-auto h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+              <p className="text-muted-foreground">Verifying reset link...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (sessionError) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-muted p-4">
@@ -101,6 +156,15 @@ export default function ResetPassword() {
             >
               Request New Link
             </Button>
+            <div className="mt-4">
+              <Link
+                to="/admin"
+                className="text-sm text-muted-foreground hover:text-primary inline-flex items-center"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Login
+              </Link>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -117,7 +181,7 @@ export default function ResetPassword() {
           <div>
             <CardTitle className="font-serif text-2xl">Reset Password</CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              Enter your new password
+              ALHIDAYA CENTRE Administration
             </p>
           </div>
         </CardHeader>
@@ -134,16 +198,28 @@ export default function ResetPassword() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
+              <p className="text-sm text-muted-foreground text-center mb-4">
+                Enter your new password below.
+              </p>
               <div className="space-y-2">
                 <Label htmlFor="password">New Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className={errors.password ? 'border-destructive' : ''}
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className={errors.password ? 'border-destructive pr-10' : 'pr-10'}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
                 {errors.password && (
                   <p className="text-xs text-destructive flex items-center gap-1">
                     <AlertCircle className="h-3 w-3" />
@@ -153,14 +229,23 @@ export default function ResetPassword() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className={errors.confirmPassword ? 'border-destructive' : ''}
-                />
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className={errors.confirmPassword ? 'border-destructive pr-10' : 'pr-10'}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
                 {errors.confirmPassword && (
                   <p className="text-xs text-destructive flex items-center gap-1">
                     <AlertCircle className="h-3 w-3" />
@@ -172,6 +257,18 @@ export default function ResetPassword() {
                 {loading ? 'Updating...' : 'Reset Password'}
               </Button>
             </form>
+          )}
+
+          {!success && (
+            <div className="mt-6 text-center">
+              <Link
+                to="/admin"
+                className="text-sm text-muted-foreground hover:text-primary inline-flex items-center"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Login
+              </Link>
+            </div>
           )}
         </CardContent>
       </Card>
