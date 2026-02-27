@@ -1,0 +1,17 @@
+name: Supabase Keep Alive
+
+on:
+  schedule:
+    - cron: "0 2 */2 * *"   # runs every 2 days
+  workflow_dispatch:        # allows manual run
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ping Supabase to prevent pause
+        run: |
+          curl -L "https://supabase.com/dashboard/project/kxzbjupdmzrspfgsstdk/editor/45134?schema=public" \
+          -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+          -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}"
