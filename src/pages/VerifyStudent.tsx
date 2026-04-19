@@ -35,15 +35,19 @@ export default function VerifyStudent() {
 
       try {
         const [studentResult, settingsResult] = await Promise.all([
-          supabase.from('students').select('*').eq('id', studentId).maybeSingle(),
+          supabase.rpc('verify_student_by_id', { _student_id: studentId }).maybeSingle(),
           supabase.from('school_settings').select('*').eq('setting_key', 'verification_message').maybeSingle(),
         ]);
 
         if (studentResult.error) throw studentResult.error;
-        
-        setStudent(studentResult.data as Student);
+
+        if (!studentResult.data) {
+          setError(true);
+        } else {
+          setStudent(studentResult.data as unknown as Student);
+        }
         setVerificationMessage(
-          settingsResult.data?.setting_value || 
+          settingsResult.data?.setting_value ||
           'This confirms that the above student successfully graduated from ALHIDAYA CENTRE.'
         );
       } catch (err) {

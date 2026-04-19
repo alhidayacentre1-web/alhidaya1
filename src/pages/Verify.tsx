@@ -25,11 +25,11 @@ export default function Verify() {
 
     setLoading(true);
     try {
-      const column = searchType === 'admission' ? 'admission_number' : 'certificate_number';
       const { data, error } = await supabase
-        .from('students')
-        .select('*')
-        .eq(column, searchValue.trim())
+        .rpc('search_student_for_verification', {
+          _search_type: searchType === 'admission' ? 'admission' : 'certificate',
+          _search_value: searchValue.trim(),
+        })
         .maybeSingle();
 
       if (error) throw error;
