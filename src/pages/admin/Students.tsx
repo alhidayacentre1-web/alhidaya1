@@ -549,16 +549,53 @@ export default function Students() {
                         variant="outline"
                         size="sm"
                         onClick={() => document.getElementById('photo')?.click()}
+                        disabled={compressing}
                       >
                         <Upload className="mr-2 h-4 w-4" />
-                        {photoPreview ? 'Change Photo' : 'Upload Photo'}
+                        {compressing
+                          ? 'Compressing...'
+                          : photoPreview
+                          ? 'Change Photo'
+                          : 'Upload Photo'}
                       </Button>
-                      <p className="text-xs text-muted-foreground mt-1">Max 5MB, JPG/PNG</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Auto-compressed to WebP. Max 10MB upload.
+                      </p>
                     </div>
                   </div>
+                  {compression && (
+                    <div className="rounded-md border border-border bg-muted/40 p-3 text-xs space-y-1">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Original:</span>
+                        <span className="font-medium">{formatBytes(compression.originalSize)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Compressed:</span>
+                        <span className="font-medium text-success">
+                          {formatBytes(compression.compressedSize)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Reduction:</span>
+                        <span className="font-semibold text-primary">
+                          {compression.reductionPercent.toFixed(1)}%
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <Button type="submit" className="w-full" disabled={uploadingPhoto}>
-                  {uploadingPhoto ? 'Uploading...' : editingStudent ? 'Update Student' : 'Add Student'}
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={uploadingPhoto || compressing}
+                >
+                  {uploadingPhoto
+                    ? 'Uploading...'
+                    : compressing
+                    ? 'Compressing...'
+                    : editingStudent
+                    ? 'Update Student'
+                    : 'Add Student'}
                 </Button>
               </form>
             </DialogContent>
