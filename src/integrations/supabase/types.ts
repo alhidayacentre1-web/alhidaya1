@@ -182,6 +182,28 @@ export type Database = {
         }
         Returns: boolean
       }
+      search_student_for_verification: {
+        Args: { _search_type: string; _search_value: string }
+        Returns: {
+          full_name: string
+          gender: string
+          graduation_status: Database["public"]["Enums"]["graduation_status"]
+          graduation_year: number
+          id: string
+          photo_url: string
+        }[]
+      }
+      verify_student_by_id: {
+        Args: { _student_id: string }
+        Returns: {
+          full_name: string
+          gender: string
+          graduation_status: Database["public"]["Enums"]["graduation_status"]
+          graduation_year: number
+          id: string
+          photo_url: string
+        }[]
+      }
     }
     Enums: {
       app_role: "super_admin"
