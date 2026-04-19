@@ -752,15 +752,25 @@ export default function Students() {
                             <TableCell>{student.graduation_year || '-'}</TableCell>
                             <TableCell>{getStatusBadge(student.graduation_status)}</TableCell>
                             <TableCell className="text-right">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setRestoringStudent(student)}
-                                className="text-primary hover:text-primary"
-                              >
-                                <RotateCcw className="mr-2 h-4 w-4" />
-                                Restore
-                              </Button>
+                              <div className="flex items-center justify-end gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setRestoringStudent(student)}
+                                  className="text-primary hover:text-primary"
+                                >
+                                  <RotateCcw className="mr-2 h-4 w-4" />
+                                  Restore
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => setPermanentDeleteStudent(student)}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete Permanently
+                                </Button>
+                              </div>
                             </TableCell>
                           </TableRow>
                         ))}
