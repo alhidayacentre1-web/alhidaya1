@@ -45,6 +45,7 @@ import type { Student, GraduationStatus, Gender } from '@/types/database';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { StudentQRCodeDialog } from '@/components/admin/StudentQRCodeDialog';
+import { compressStudentImage, formatBytes, type CompressionResult } from '@/lib/imageCompression';
 
 interface GraduationYear {
   id: string;
@@ -78,6 +79,8 @@ export default function Students() {
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [compressing, setCompressing] = useState(false);
+  const [compression, setCompression] = useState<CompressionResult | null>(null);
 
   const fetchGraduationYears = async () => {
     try {
@@ -125,37 +128,46 @@ export default function Students() {
     setSearchParams(searchParams, { replace: true });
   }, [yearFilter]);
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('Photo must be less than 5MB');
-        return;
-      }
-      setSelectedPhoto(file);
-      setPhotoPreview(URL.createObjectURL(file));
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Photo must be less than 10MB');
+      return;
+    }
+    setCompressing(true);
+    try {
+      const result = await compressStudentImage(file);
+      setSelectedPhoto(result.file);
+      setPhotoPreview(URL.createObjectURL(result.file));
+      setCompression(result);
+    } catch (err) {
+      console.error('Compression error:', err);
+      toast.error('Failed to compress image');
+    } finally {
+      setCompressing(false);
     }
   };
 
-  const uploadPhoto = async (studentId: string): Promise<string | null> => {
+  const uploadPhoto = async (studentId: string): Promise<{ url: string; sizeKb: number } | null> => {
     if (!selectedPhoto) return null;
-    
+
     setUploadingPhoto(true);
     try {
-      const fileExt = selectedPhoto.name.split('.').pop();
-      const fileName = `${studentId}.${fileExt}`;
-      
+      const fileName = `${studentId}.webp`;
+
       const { error: uploadError } = await supabase.storage
         .from('student-photos')
-        .upload(fileName, selectedPhoto, { upsert: true });
-      
+        .upload(fileName, selectedPhoto, { upsert: true, contentType: 'image/webp' });
+
       if (uploadError) throw uploadError;
-      
+
       const { data: { publicUrl } } = supabase.storage
         .from('student-photos')
         .getPublicUrl(fileName);
-      
-      return publicUrl;
+
+      const sizeKb = Math.max(1, Math.round(selectedPhoto.size / 1024));
+      return { url: `${publicUrl}?v=${Date.now()}`, sizeKb };
     } catch (error) {
       console.error('Error uploading photo:', error);
       toast.error('Failed to upload photo');
@@ -201,14 +213,20 @@ export default function Students() {
         }
 
         // Upload photo if selected
-        let photoUrl: string | null = null;
+        let uploadResult: { url: string; sizeKb: number } | null = null;
         if (selectedPhoto) {
-          photoUrl = await uploadPhoto(editingStudent.id);
+          uploadResult = await uploadPhoto(editingStudent.id);
         }
-        
+
+        const updatePayload: any = { ...basePayload };
+        if (uploadResult) {
+          updatePayload.photo_url = uploadResult.url;
+          updatePayload.image_size_kb = uploadResult.sizeKb;
+        }
+
         const { error } = await supabase
           .from('students')
-          .update(photoUrl ? { ...basePayload, photo_url: photoUrl } : basePayload)
+          .update(updatePayload)
           .eq('id', editingStudent.id);
 
         if (error) throw error;
@@ -243,11 +261,14 @@ export default function Students() {
         
         // Upload photo if selected
         if (selectedPhoto && newStudent) {
-          const photoUrl = await uploadPhoto(newStudent.id);
-          if (photoUrl) {
+          const uploadResult = await uploadPhoto(newStudent.id);
+          if (uploadResult) {
             await supabase
               .from('students')
-              .update({ photo_url: photoUrl })
+              .update({
+                photo_url: uploadResult.url,
+                image_size_kb: uploadResult.sizeKb,
+              } as any)
               .eq('id', newStudent.id);
           }
         }
@@ -276,6 +297,7 @@ export default function Students() {
     setEditingStudent(null);
     setSelectedPhoto(null);
     setPhotoPreview(null);
+    setCompression(null);
   };
 
   const openEditDialog = (student: Student) => {
@@ -290,6 +312,7 @@ export default function Students() {
     });
     setSelectedPhoto(null);
     setPhotoPreview(student.photo_url || null);
+    setCompression(null);
     setDialogOpen(true);
   };
 
@@ -526,16 +549,53 @@ export default function Students() {
                         variant="outline"
                         size="sm"
                         onClick={() => document.getElementById('photo')?.click()}
+                        disabled={compressing}
                       >
                         <Upload className="mr-2 h-4 w-4" />
-                        {photoPreview ? 'Change Photo' : 'Upload Photo'}
+                        {compressing
+                          ? 'Compressing...'
+                          : photoPreview
+                          ? 'Change Photo'
+                          : 'Upload Photo'}
                       </Button>
-                      <p className="text-xs text-muted-foreground mt-1">Max 5MB, JPG/PNG</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Auto-compressed to WebP. Max 10MB upload.
+                      </p>
                     </div>
                   </div>
+                  {compression && (
+                    <div className="rounded-md border border-border bg-muted/40 p-3 text-xs space-y-1">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Original:</span>
+                        <span className="font-medium">{formatBytes(compression.originalSize)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Compressed:</span>
+                        <span className="font-medium text-success">
+                          {formatBytes(compression.compressedSize)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Reduction:</span>
+                        <span className="font-semibold text-primary">
+                          {compression.reductionPercent.toFixed(1)}%
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <Button type="submit" className="w-full" disabled={uploadingPhoto}>
-                  {uploadingPhoto ? 'Uploading...' : editingStudent ? 'Update Student' : 'Add Student'}
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={uploadingPhoto || compressing}
+                >
+                  {uploadingPhoto
+                    ? 'Uploading...'
+                    : compressing
+                    ? 'Compressing...'
+                    : editingStudent
+                    ? 'Update Student'
+                    : 'Add Student'}
                 </Button>
               </form>
             </DialogContent>

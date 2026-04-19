@@ -4,6 +4,7 @@ import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, GraduationCap, Award, XCircle, MessageSquare, Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { StorageUsageCard } from '@/components/admin/StorageUsageCard';
 
 interface Stats {
   totalStudents: number;
@@ -111,7 +112,8 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Quick Actions */}
+        {/* Storage Usage Monitoring */}
+        <StorageUsageCard />
         <Card className="border-0 shadow-lg">
           <CardHeader>
             <CardTitle className="font-serif">Quick Actions</CardTitle>

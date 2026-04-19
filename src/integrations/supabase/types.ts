@@ -118,6 +118,7 @@ export type Database = {
           graduation_status: Database["public"]["Enums"]["graduation_status"]
           graduation_year: number | null
           id: string
+          image_size_kb: number | null
           photo_url: string | null
           updated_at: string
         }
@@ -131,6 +132,7 @@ export type Database = {
           graduation_status?: Database["public"]["Enums"]["graduation_status"]
           graduation_year?: number | null
           id?: string
+          image_size_kb?: number | null
           photo_url?: string | null
           updated_at?: string
         }
@@ -144,6 +146,7 @@ export type Database = {
           graduation_status?: Database["public"]["Enums"]["graduation_status"]
           graduation_year?: number | null
           id?: string
+          image_size_kb?: number | null
           photo_url?: string | null
           updated_at?: string
         }
