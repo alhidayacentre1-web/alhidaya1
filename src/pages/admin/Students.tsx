@@ -45,6 +45,7 @@ import type { Student, GraduationStatus, Gender } from '@/types/database';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { StudentQRCodeDialog } from '@/components/admin/StudentQRCodeDialog';
+import { compressStudentImage, formatBytes, type CompressionResult } from '@/lib/imageCompression';
 
 interface GraduationYear {
   id: string;
@@ -78,6 +79,8 @@ export default function Students() {
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [compressing, setCompressing] = useState(false);
+  const [compression, setCompression] = useState<CompressionResult | null>(null);
 
   const fetchGraduationYears = async () => {
     try {
@@ -125,37 +128,46 @@ export default function Students() {
     setSearchParams(searchParams, { replace: true });
   }, [yearFilter]);
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('Photo must be less than 5MB');
-        return;
-      }
-      setSelectedPhoto(file);
-      setPhotoPreview(URL.createObjectURL(file));
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Photo must be less than 10MB');
+      return;
+    }
+    setCompressing(true);
+    try {
+      const result = await compressStudentImage(file);
+      setSelectedPhoto(result.file);
+      setPhotoPreview(URL.createObjectURL(result.file));
+      setCompression(result);
+    } catch (err) {
+      console.error('Compression error:', err);
+      toast.error('Failed to compress image');
+    } finally {
+      setCompressing(false);
     }
   };
 
-  const uploadPhoto = async (studentId: string): Promise<string | null> => {
+  const uploadPhoto = async (studentId: string): Promise<{ url: string; sizeKb: number } | null> => {
     if (!selectedPhoto) return null;
-    
+
     setUploadingPhoto(true);
     try {
-      const fileExt = selectedPhoto.name.split('.').pop();
-      const fileName = `${studentId}.${fileExt}`;
-      
+      const fileName = `${studentId}.webp`;
+
       const { error: uploadError } = await supabase.storage
         .from('student-photos')
-        .upload(fileName, selectedPhoto, { upsert: true });
-      
+        .upload(fileName, selectedPhoto, { upsert: true, contentType: 'image/webp' });
+
       if (uploadError) throw uploadError;
-      
+
       const { data: { publicUrl } } = supabase.storage
         .from('student-photos')
         .getPublicUrl(fileName);
-      
-      return publicUrl;
+
+      const sizeKb = Math.max(1, Math.round(selectedPhoto.size / 1024));
+      return { url: `${publicUrl}?v=${Date.now()}`, sizeKb };
     } catch (error) {
       console.error('Error uploading photo:', error);
       toast.error('Failed to upload photo');
