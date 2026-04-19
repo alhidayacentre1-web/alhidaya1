@@ -63,6 +63,7 @@ export default function Students() {
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [deletingStudent, setDeletingStudent] = useState<Student | null>(null);
   const [restoringStudent, setRestoringStudent] = useState<Student | null>(null);
+  const [permanentDeleteStudent, setPermanentDeleteStudent] = useState<Student | null>(null);
   const [qrStudent, setQrStudent] = useState<Student | null>(null);
   const [activeTab, setActiveTab] = useState<string>('active');
 
