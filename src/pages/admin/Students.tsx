@@ -802,6 +802,24 @@ export default function Students() {
           </AlertDialogContent>
         </AlertDialog>
 
+        {/* Permanent Delete Confirmation Dialog */}
+        <AlertDialog open={!!permanentDeleteStudent} onOpenChange={(open) => !open && setPermanentDeleteStudent(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Permanently Delete Student</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete <strong>{permanentDeleteStudent?.full_name}</strong> and cannot be undone. The record will be removed from the database forever.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handlePermanentDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Delete Permanently
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         {/* Restore Confirmation Dialog */}
         <AlertDialog open={!!restoringStudent} onOpenChange={(open) => !open && setRestoringStudent(null)}>
           <AlertDialogContent>
