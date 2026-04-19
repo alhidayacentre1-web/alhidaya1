@@ -297,6 +297,7 @@ export default function Students() {
     setEditingStudent(null);
     setSelectedPhoto(null);
     setPhotoPreview(null);
+    setCompression(null);
   };
 
   const openEditDialog = (student: Student) => {
@@ -311,6 +312,7 @@ export default function Students() {
     });
     setSelectedPhoto(null);
     setPhotoPreview(student.photo_url || null);
+    setCompression(null);
     setDialogOpen(true);
   };
 
