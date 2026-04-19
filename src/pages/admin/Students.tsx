@@ -213,14 +213,20 @@ export default function Students() {
         }
 
         // Upload photo if selected
-        let photoUrl: string | null = null;
+        let uploadResult: { url: string; sizeKb: number } | null = null;
         if (selectedPhoto) {
-          photoUrl = await uploadPhoto(editingStudent.id);
+          uploadResult = await uploadPhoto(editingStudent.id);
         }
-        
+
+        const updatePayload: any = { ...basePayload };
+        if (uploadResult) {
+          updatePayload.photo_url = uploadResult.url;
+          updatePayload.image_size_kb = uploadResult.sizeKb;
+        }
+
         const { error } = await supabase
           .from('students')
-          .update(photoUrl ? { ...basePayload, photo_url: photoUrl } : basePayload)
+          .update(updatePayload)
           .eq('id', editingStudent.id);
 
         if (error) throw error;
@@ -255,11 +261,14 @@ export default function Students() {
         
         // Upload photo if selected
         if (selectedPhoto && newStudent) {
-          const photoUrl = await uploadPhoto(newStudent.id);
-          if (photoUrl) {
+          const uploadResult = await uploadPhoto(newStudent.id);
+          if (uploadResult) {
             await supabase
               .from('students')
-              .update({ photo_url: photoUrl })
+              .update({
+                photo_url: uploadResult.url,
+                image_size_kb: uploadResult.sizeKb,
+              } as any)
               .eq('id', newStudent.id);
           }
         }
