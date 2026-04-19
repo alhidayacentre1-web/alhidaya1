@@ -334,6 +334,30 @@ export default function Students() {
     }
   };
 
+  const handlePermanentDelete = async () => {
+    if (!permanentDeleteStudent) return;
+    try {
+      if (permanentDeleteStudent.photo_url) {
+        const fileName = permanentDeleteStudent.photo_url.split('/').pop();
+        if (fileName) {
+          await supabase.storage.from('student-photos').remove([fileName]);
+        }
+      }
+      const { error } = await supabase
+        .from('students')
+        .delete()
+        .eq('id', permanentDeleteStudent.id);
+
+      if (error) throw error;
+
+      toast.success('Student permanently deleted');
+      setPermanentDeleteStudent(null);
+      fetchStudents();
+    } catch (error) {
+      console.error('Error permanently deleting student:', error);
+      toast.error('Failed to permanently delete student');
+    }
+  };
   const getStatusBadge = (status: GraduationStatus) => {
     switch (status) {
       case 'graduated':
