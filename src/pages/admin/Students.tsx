@@ -385,13 +385,13 @@ export default function Students() {
                 Add Student
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
+            <DialogContent className="max-w-md max-h-[90vh] flex flex-col p-0">
+              <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
                 <DialogTitle className="font-serif">
                   {editingStudent ? 'Edit Student' : 'Add New Student'}
                 </DialogTitle>
               </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto px-6 pb-6 flex-1">
                 <div className="space-y-2">
                   <Label htmlFor="full_name">Full Name *</Label>
                   <Input
