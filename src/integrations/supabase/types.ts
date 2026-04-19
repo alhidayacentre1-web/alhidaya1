@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      atualizar: {
+        Row: {
+          created_at: string
+          id: number
+          numero: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          numero?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          numero?: number | null
+        }
+        Relationships: []
+      }
       contact_messages: {
         Row: {
           admin_response: string | null

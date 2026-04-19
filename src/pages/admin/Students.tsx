@@ -63,6 +63,7 @@ export default function Students() {
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [deletingStudent, setDeletingStudent] = useState<Student | null>(null);
   const [restoringStudent, setRestoringStudent] = useState<Student | null>(null);
+  const [permanentDeleteStudent, setPermanentDeleteStudent] = useState<Student | null>(null);
   const [qrStudent, setQrStudent] = useState<Student | null>(null);
   const [activeTab, setActiveTab] = useState<string>('active');
 
@@ -333,6 +334,30 @@ export default function Students() {
     }
   };
 
+  const handlePermanentDelete = async () => {
+    if (!permanentDeleteStudent) return;
+    try {
+      if (permanentDeleteStudent.photo_url) {
+        const fileName = permanentDeleteStudent.photo_url.split('/').pop();
+        if (fileName) {
+          await supabase.storage.from('student-photos').remove([fileName]);
+        }
+      }
+      const { error } = await supabase
+        .from('students')
+        .delete()
+        .eq('id', permanentDeleteStudent.id);
+
+      if (error) throw error;
+
+      toast.success('Student permanently deleted');
+      setPermanentDeleteStudent(null);
+      fetchStudents();
+    } catch (error) {
+      console.error('Error permanently deleting student:', error);
+      toast.error('Failed to permanently delete student');
+    }
+  };
   const getStatusBadge = (status: GraduationStatus) => {
     switch (status) {
       case 'graduated':
@@ -385,13 +410,13 @@ export default function Students() {
                 Add Student
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
+            <DialogContent className="max-w-md max-h-[90vh] flex flex-col p-0">
+              <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
                 <DialogTitle className="font-serif">
                   {editingStudent ? 'Edit Student' : 'Add New Student'}
                 </DialogTitle>
               </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto px-6 pb-6 flex-1">
                 <div className="space-y-2">
                   <Label htmlFor="full_name">Full Name *</Label>
                   <Input
@@ -727,15 +752,25 @@ export default function Students() {
                             <TableCell>{student.graduation_year || '-'}</TableCell>
                             <TableCell>{getStatusBadge(student.graduation_status)}</TableCell>
                             <TableCell className="text-right">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setRestoringStudent(student)}
-                                className="text-primary hover:text-primary"
-                              >
-                                <RotateCcw className="mr-2 h-4 w-4" />
-                                Restore
-                              </Button>
+                              <div className="flex items-center justify-end gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setRestoringStudent(student)}
+                                  className="text-primary hover:text-primary"
+                                >
+                                  <RotateCcw className="mr-2 h-4 w-4" />
+                                  Restore
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => setPermanentDeleteStudent(student)}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete Permanently
+                                </Button>
+                              </div>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -762,6 +797,24 @@ export default function Students() {
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                 Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Permanent Delete Confirmation Dialog */}
+        <AlertDialog open={!!permanentDeleteStudent} onOpenChange={(open) => !open && setPermanentDeleteStudent(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Permanently Delete Student</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete <strong>{permanentDeleteStudent?.full_name}</strong> and cannot be undone. The record will be removed from the database forever.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handlePermanentDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Delete Permanently
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
